@@ -1,5 +1,9 @@
 # 💰 Делай Кассу
 
+[![Лицензия: MIT](https://img.shields.io/badge/лицензия-MIT-blue.svg)](LICENSE)
+[![Версия: 23](https://img.shields.io/badge/версия-23-blue.svg)](../../releases)
+[![PWA: ставится с сайта](https://img.shields.io/badge/PWA-ставится_с_сайта-0f8f7f.svg)](https://app.delaykassu.ru)
+
 ### Смены. Заказы. Часы. Деньги. Без бухгалтерского шаманства.
 
 **«Делай Кассу»** — бесплатное приложение для курьеров и всех, кто работает сменами или на заказах.

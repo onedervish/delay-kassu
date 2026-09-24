@@ -1,5 +1,9 @@
 # 💰 Delay Kassu
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version: 23](https://img.shields.io/badge/version-23-blue.svg)](../../releases)
+[![PWA: installs from the web](https://img.shields.io/badge/PWA-installs_from_the_web-0f8f7f.svg)](https://app.delaykassu.ru)
+
 ### Shifts. Orders. Hours. Money. No accounting voodoo.
 
 **Delay Kassu** is a free app for couriers and anyone who works shifts or gets paid per order.
