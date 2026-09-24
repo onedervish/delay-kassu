@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<script>
+/* СХЕМА СТАВИТСЯ ДО ОТРИСОВКИ. Старый синтаксис, как и вся шапка.
+   Выбор живёт в настройках, в базе, но база отвечает не сразу — за это время
+   экран успел бы мигнуть чужими цветами. Поэтому рядом держим зеркало
+   в localStorage: читается мгновенно, а хозяин значения всё равно база. */
+(function () {
+  var name = 'glubina';
+  try {
+    var saved = window.localStorage.getItem('theme');
+    if (saved === 'laguna' || saved === 'myata' || saved === 'indigo' || saved === 'glubina') {
+      name = saved;
+    }
+  } catch (e) { /* приватный режим — остаёмся на схеме по умолчанию */ }
+  document.documentElement.setAttribute('data-theme', name);
+})();
+</script>
+<script>
+/* АВАРИЙНЫЙ ЭКРАН. Стоит первым и написан строго на старом синтаксисе:
+   var, обычные функции, никаких стрелок, let/const, шаблонных строк и ?.
+   Смысл в том, что мы ловим движок, который чего-то не понял, — ловушка
+   обязана быть понятной ему заведомо. Номер версии читается мягко:
+   если version.js не загрузился, пишем «неизвестна», а не падаем. */
+(function () {
+  var box = null;
+  var list = null;
+  var watchdog = null;
+  var notes = [];   // что случилось до появления экрана: покажем, если он появится
+
+  function version() {
+    try {
+      if (typeof APP_VERSION !== 'undefined') return String(APP_VERSION);
+    } catch (e) {}
+    return 'неизвестна';
+  }
+
+  function line(text, style) {
+    var d = document.createElement('div');
+    d.setAttribute('style', 'word-break:break-word;margin-top:4px;' + (style || ''));
+    d.appendChild(document.createTextNode(text));
+    return d;
+  }
+
+  function build() {
+    if (box) return;
+
+    box = document.createElement('div');
+    box.setAttribute('style',
+      'position:fixed;inset:0;top:0;right:0;bottom:0;left:0;z-index:99999;' +
+      'background:#0B1A1E;padding:16px;overflow:auto;color:#ffffff;' +
+      'font:15px/1.45 system-ui,-apple-system,Segoe UI,Arial,sans-serif;' +
+      '-webkit-user-select:text;user-select:text');
+
+    var title = document.createElement('div');
+    title.setAttribute('style', 'font-size:20px;color:#FF6B6B;margin-bottom:10px');
+    title.appendChild(document.createTextNode('Приложение не запустилось'));
+    box.appendChild(title);
+
+    list = document.createElement('div');
+    box.appendChild(list);
+
+    var foot = document.createElement('div');
+    foot.setAttribute('style', 'margin-top:14px;padding-top:12px;border-top:1px solid #2A4148');
+    foot.appendChild(line('Версия: ' + version()));
+    foot.appendChild(line('Браузер:'));
+    foot.appendChild(line(navigator.userAgent, 'font-family:monospace'));
+    box.appendChild(foot);
+
+    var btn = document.createElement('button');
+    btn.setAttribute('type', 'button');
+    btn.setAttribute('style',
+      'margin-top:14px;min-height:44px;padding:0 18px;font-size:15px;' +
+      'border-radius:10px;border:1px solid #7DE3D6;background:#12333A;color:#EAF9FA');
+    btn.appendChild(document.createTextNode('Скопировать всё'));
+    btn.onclick = function () {
+      var text = box.innerText || box.textContent || '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        btn.firstChild.nodeValue = 'Скопировано';
+      } catch (e) {
+        btn.firstChild.nodeValue = 'Копирование запрещено — выделите текст пальцем';
+      }
+    };
+    box.appendChild(btn);
+
+    (document.body || document.documentElement).appendChild(box);
+
+    /* Всё, что накопилось до появления экрана, выводим сюда же. */
+    var i;
+    for (i = 0; i < notes.length; i++) show(notes[i][0], notes[i][1]);
+    notes = [];
+  }
+
+  /* Экран на всё окно: без этих файлов работать нечему. */
+  function fatal(text) {
+    build();
+    var block = document.createElement('div');
+    block.setAttribute('style', 'margin-top:12px;padding-top:10px;border-top:1px solid #1B3238');
+    block.appendChild(line(text, 'font-size:17px'));
+
+    var again = document.createElement('button');
+    again.setAttribute('type', 'button');
+    again.setAttribute('style',
+      'margin-top:12px;min-height:44px;padding:0 18px;font-size:15px;' +
+      'border-radius:10px;border:1px solid #7DE3D6;background:#12333A;color:#EAF9FA');
+    again.appendChild(document.createTextNode('Обновить'));
+    again.onclick = function () { location.reload(); };
+    block.appendChild(again);
+
+    list.appendChild(block);
+  }
+
+  /* Вторая и последующие ошибки дописываются в тот же список. */
+  function show(head, where) {
+    build();
+    var block = document.createElement('div');
+    block.setAttribute('style', 'margin-top:12px;padding-top:10px;border-top:1px solid #1B3238');
+    block.appendChild(line(head, 'font-family:monospace'));
+    if (where) block.appendChild(line(where, 'color:#BFE9E4'));
+    list.appendChild(block);
+  }
+
+  /* Публичный вход: сюда пишут другие скрипты в шапке.
+     Экран из-за этого не открывается — приложение может быть в порядке. */
+  function note(head, where) {
+    if (box) { show(head, where); } else { notes.push([head, where]); }
+  }
+  window.APP_TRAP_NOTE = note;
+
+  /* Сторож: фотография этого списка должна быть готовым отчётом. */
+  function facts() {
+    var i, screens, parts;
+
+    try {
+      show('Что видно на странице:', '');
+    } catch (e) {}
+
+    try {
+      if (notes.length) {
+        for (i = 0; i < notes.length; i++) show(notes[i][0], notes[i][1]);
+        notes = [];
+      }
+    } catch (e) {}
+
+    try {
+      list.appendChild(line('Элементов внутри body: ' +
+        (document.body ? document.body.getElementsByTagName('*').length : 'body нет')));
+      list.appendChild(line('Высота документа: ' +
+        document.documentElement.scrollHeight + ' px'));
+    } catch (e) {}
+
+    try {
+      var cs = window.getComputedStyle(document.body);
+      list.appendChild(line('Фон body: ' + cs.backgroundColor +
+        ', картинка: ' + (cs.backgroundImage === 'none' ? 'нет' : 'есть')));
+      /* Самый честный признак того, что наш css вообще применился. */
+      list.appendChild(line('Стили применились: ' +
+        (cs.fontFamily.indexOf('Onest') === -1 ? 'НЕТ' : 'да') +
+        ' (шрифт body: ' + cs.fontFamily + ')'));
+    } catch (e) {
+      list.appendChild(line('Фон body: прочитать не удалось'));
+    }
+
+    try {
+      screens = document.getElementsByClassName('screen');
+      parts = [];
+      for (i = 0; i < screens.length; i++) {
+        parts.push((screens[i].id || '?') + ': ' +
+          window.getComputedStyle(screens[i]).display);
+      }
+      list.appendChild(line('Экранов найдено: ' + screens.length));
+      list.appendChild(line(parts.join(' | ') || 'ни одного'));
+    } catch (e) {}
+
+    try {
+      if (!navigator.serviceWorker) {
+        list.appendChild(line('Service worker: не поддерживается браузером'));
+      } else {
+        list.appendChild(line('Service worker управляет страницей: ' +
+          (navigator.serviceWorker.controller ? 'да' : 'нет')));
+        if (navigator.serviceWorker.getRegistration) {
+          navigator.serviceWorker.getRegistration().then(function (reg) {
+            list.appendChild(line('Service worker зарегистрирован: ' + (reg ? 'да' : 'нет')));
+          }, function () {
+            list.appendChild(line('Service worker зарегистрирован: проверить не удалось'));
+          });
+        }
+      }
+    } catch (e) {}
+  }
+
+  window.onerror = function (message, source, lineno, colno) {
+    show('Ошибка: ' + message,
+      (source || 'файл неизвестен') + ', строка ' + lineno +
+      (colno ? ', столбец ' + colno : ''));
+    return false;
+  };
+
+  window.addEventListener('unhandledrejection', function (event) {
+    var reason = event ? event.reason : null;
+    var text = (reason && reason.message) ? reason.message : String(reason);
+    show('Необработанный отказ: ' + text, reason && reason.stack ? reason.stack : '');
+  });
+
+  /* Перехватывающая стадия — иначе ошибки загрузки файлов не ловятся. */
+  window.addEventListener('error', function (event) {
+    var target = event ? event.target : null;
+    if (!target || target === window) return;
+
+    var url = String(target.src || target.href || '');
+    if (!url) return;
+
+    /* Шрифты — косметика, о них не сообщаем. */
+    if (url.indexOf('.woff') !== -1) return;
+
+    /* Каждый не доехавший файл попадает в список отдельной строкой. */
+    note('Не загрузился файл', url);
+
+    /* Без этих двух работать нечему — вот тогда экран на всё окно. */
+    if (url.indexOf('js/app.js') !== -1 || url.indexOf('js/db.js') !== -1) {
+      fatal('Не удалось загрузить приложение. Проверьте связь и обновите страницу.');
+    }
+  }, true);
+
+  /* Тихое зависание: исключения нет, а экранов тоже нет. */
+  watchdog = setTimeout(function () {
+    watchdog = null;
+    if (box) return;
+    show('Приложение загрузилось, но ни один экран не появился.', '');
+    facts();
+  }, 4000);
+
+  /* Приложение сообщает, что отрисовалось, — сторож снимается. */
+  window.APP_READY = function () {
+    if (watchdog) { clearTimeout(watchdog); watchdog = null; }
+  };
+})();
+</script>
+<script src="js/version.js"></script>
+
+<script>
+/* Регистрация service worker. Отдельно от app.js и как можно раньше:
+   она не должна зависеть от того, доехал ли остальной код. Старый синтаксис.
+   Ошибку не глотаем — отдаём в аварийный экран, но сам экран из-за неё
+   не открываем: без воркера приложение работает, просто требует сети. */
+(function () {
+  function tell(head, where) {
+    if (window.APP_TRAP_NOTE) window.APP_TRAP_NOTE(head, where);
+  }
+  try {
+    if (!navigator.serviceWorker) {
+      tell('Service worker: браузер его не поддерживает', '');
+      return;
+    }
+    if (location.protocol === 'file:') return;   /* по file:// он запрещён */
+
+    navigator.serviceWorker.register('sw.js').then(function () {}, function (error) {
+      tell('Service worker не зарегистрировался',
+        error && error.message ? error.message : String(error));
+    });
+  } catch (e) {
+    tell('Service worker: ошибка при регистрации', e && e.message ? e.message : String(e));
+  }
+})();
+</script>
+
+<meta name="theme-color" content="#07343D">
+<title>Делай Кассу</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+
+<style>
+/* ЗАПАСНЫЕ СТИЛИ. Работают, только если внешний файл не доехал: он идёт ниже
+   и перекрывает эти правила. Здесь нет украшений — задача одна, чтобы
+   приложение осталось тёмным и читаемым, а не белым листом с засечками.
+   Цвета здесь НАМЕРЕННО записаны значениями, а не переменными: переменные
+   живут в css/app.css, а его в этот момент может и не быть. Та же причина
+   у аварийного экрана выше и у оранжевой полосы «оформление не загрузилось». */
+html, body {
+  margin: 0;
+  background: #04191F;
+  color: #EAF9FA;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+}
+[hidden] { display: none !important; }
+h1, h2 { font-size: 19px; margin: 12px 0; }
+p { margin: 8px 0; }
+button {
+  font: inherit;
+  min-height: 44px;
+  padding: 0 16px;
+  color: #EAF9FA;
+  background: #12333A;
+  border: 1px solid #2A4148;
+  border-radius: 10px;
+}
+input, select, textarea {
+  font: inherit;
+  color: #EAF9FA;
+  background: #0B2A33;
+  border: 1px solid #2A4148;
+  border-radius: 8px;
+  padding: 8px;
+}
+/* Единственное украшение, которое здесь оправдано: цвет службы. Код кладёт
+   его тройкой чисел прямо в карточку, и без него все смены на одно лицо. */
+.shift { background: rgba(var(--svc-rgb), 0.22); }
+img, svg { max-width: 100%; }
+/* Без внешних стилей фоновые знаки текут как обычный текст и выталкивают
+   приложение за экран. Внешний файл включает слой обратно. */
+.bg, .top-scrim { display: none; }
+</style>
+
+<script>
+/* Запасные попытки для таблицы стилей. Добавка в конце адреса нужна, чтобы
+   браузер сходил заново, а не отдал тот же неудачный ответ из памяти. */
+(function () {
+  var tries = 0;
+  var done = false;
+  var timer = null;
+
+  window.__cssOk = function () {
+    done = true;
+    if (timer) { clearTimeout(timer); timer = null; }
+  };
+
+  function attempt() {
+    if (done) return;
+    tries++;
+
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'css/app.css?r=' + tries;
+    link.onload = window.__cssOk;
+    link.onerror = function () {
+      if (tries >= 2) giveUp();
+    };
+    document.head.appendChild(link);
+  }
+
+  function giveUp() {
+    if (done) return;
+    if (window.APP_TRAP_NOTE) {
+      window.APP_TRAP_NOTE('Оформление не загрузилось после трёх попыток', 'css/app.css');
+    }
+    showBar();
+  }
+
+  /* Полоса, а не экран: разметка на месте, запасные стили работают,
+     пользоваться приложением можно. Закрывать его из-за косметики нельзя. */
+  function showBar() {
+    if (document.getElementById('css-bar')) return;
+
+    var bar = document.createElement('div');
+    bar.id = 'css-bar';
+    bar.setAttribute('style',
+      'position:relative;z-index:9998;display:flex;align-items:center;gap:12px;' +
+      'padding:10px 14px;background:#7A3B00;color:#ffffff;' +
+      'font:15px/1.35 system-ui,-apple-system,Segoe UI,Arial,sans-serif');
+
+    var text = document.createElement('span');
+    text.setAttribute('style', 'flex:1 1 auto');
+    text.appendChild(document.createTextNode(
+      'Оформление не загрузилось. Приложение работает, но выглядит непривычно.'));
+    bar.appendChild(text);
+
+    var again = document.createElement('button');
+    again.setAttribute('type', 'button');
+    again.setAttribute('style',
+      'flex:0 0 auto;min-height:40px;padding:0 14px;font:inherit;color:#7A3B00;' +
+      'background:#ffffff;border:0;border-radius:8px');
+    again.appendChild(document.createTextNode('Обновить'));
+    again.onclick = function () { location.reload(); };
+    bar.appendChild(again);
+
+    if (document.body) {
+      document.body.insertBefore(bar, document.body.firstChild);
+    } else {
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.insertBefore(bar, document.body.firstChild);
+      });
+    }
+  }
+
+  window.__cssFail = function () {
+    attempt();                                  /* попытка 2 — сразу */
+    timer = setTimeout(function () {            /* попытка 3 — через 1,5 секунды */
+      timer = null;
+      attempt();
+    }, 1500);
+  };
+})();
+</script>
+
+<link rel="stylesheet" href="css/app.css" onload="__cssOk()" onerror="__cssFail()">
+</head>
+<body>
+
+<!-- Фоновый слой: пятна, геометрия, штриховка, знаки. Кликов не ловит. -->
+<div class="bg" aria-hidden="true">
+
+  <!-- слой 2: размытые пятна -->
+  <span class="bg-blob" style="width:300px;height:300px;right:-120px;top:30px;background:var(--bg-blob-1);filter:blur(60px)"></span>
+  <span class="bg-blob" style="width:260px;height:260px;left:-90px;top:320px;background:var(--bg-blob-2);filter:blur(56px)"></span>
+  <span class="bg-blob" style="width:240px;height:240px;left:-60px;bottom:120px;background:var(--bg-blob-3);filter:blur(52px)"></span>
+  <span class="bg-blob" style="width:200px;height:200px;right:-60px;bottom:260px;background:var(--bg-blob-4);filter:blur(48px)"></span>
+
+  <!-- слой 3: геометрия -->
+  <span class="bg-sq" style="width:250px;height:250px;right:-84px;top:96px;transform:rotate(24deg)"></span>
+  <span class="bg-sq bg-sq--fill" style="width:170px;height:170px;right:26px;top:322px;transform:rotate(-17deg)"></span>
+  <span class="bg-sq" style="width:300px;height:300px;left:-122px;top:440px;transform:rotate(14deg)"></span>
+  <span class="bg-sq" style="width:130px;height:130px;left:210px;bottom:150px;transform:rotate(32deg);border-radius:26%"></span>
+  <span class="bg-circle" style="width:340px;height:340px;right:-142px;bottom:46px"></span>
+  <span class="bg-circle" style="width:200px;height:200px;left:-70px;top:180px"></span>
+  <span class="bg-tri" style="width:128px;height:112px;left:168px;top:176px;transform:rotate(11deg)"></span>
+  <span class="bg-tri" style="width:90px;height:78px;right:40px;bottom:420px;transform:rotate(-24deg)"></span>
+  <span class="bg-hex" style="width:150px;height:130px;left:-30px;bottom:330px;transform:rotate(8deg)"></span>
+
+  <!-- штриховка -->
+  <span class="bg-lines"></span>
+
+  <!-- дуги: каркас под знаками -->
+  <span class="bg-arc bg-arc--1"></span>
+  <span class="bg-arc bg-arc--2"></span>
+  <span class="bg-arc bg-arc--3"></span>
+  <span class="bg-arc bg-arc--4"></span>
+
+  <!-- слой 4: десять предметов про деньги; положение доводит fitMarks() -->
+  <span class="bg-mark bg-mark--ruble" data-mark="ruble" data-size="150" data-angle="168" data-right="14" data-top="150" style="width:150px;height:150px;right:14px;top:150px;transform:rotate(168deg);opacity:0.042;font-size:150px">₽</span>
+
+  <span class="bg-mark" data-mark="coin" data-size="96" data-angle="-34" data-left="18" data-top="210" style="width:96px;height:96px;left:18px;top:210px;transform:rotate(-34deg);opacity:0.04">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 17V7h3.2a2.9 2.9 0 0 1 0 5.8H8.6"/><path d="M8.6 15h4.6"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="stack" data-size="110" data-angle="22" data-right="26" data-top="360" style="width:110px;height:110px;right:26px;top:360px;transform:rotate(22deg);opacity:0.036">
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="6.5" rx="6.5" ry="2.5"/><path d="M5.5 6.5v4c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-4"/><path d="M5.5 10.5v4c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-4"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="note" data-size="130" data-angle="-14" data-left="10" data-top="430" style="width:130px;height:130px;left:10px;top:430px;transform:rotate(-14deg);opacity:0.038">
+    <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M5.5 9v6M18.5 9v6"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="wallet" data-size="120" data-angle="196" data-right="18" data-bottom="300" style="width:120px;height:120px;right:18px;bottom:300px;transform:rotate(196deg);opacity:0.036">
+    <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="3"/><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H17"/><path d="M15.5 13h4.5"/><circle cx="16.4" cy="13" r="0.9"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="card" data-size="108" data-angle="41" data-left="24" data-bottom="190" style="width:108px;height:108px;left:24px;bottom:190px;transform:rotate(41deg);opacity:0.034">
+    <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="check" data-size="88" data-angle="-22" data-right="40" data-bottom="150" style="width:88px;height:88px;right:40px;bottom:150px;transform:rotate(-22deg);opacity:0.032">
+    <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4L6 21z"/><path d="M9 8h6M9 12h6"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="calc" data-size="92" data-angle="12" data-left="36" data-top="320" style="width:92px;height:92px;left:36px;top:320px;transform:rotate(12deg);opacity:0.03">
+    <svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx="1"/><path d="M9 13h.01M12 13h.01M15 13h.01M9 17h.01M12 17h.01M15 17h.01"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="piggy" data-size="118" data-angle="-9" data-right="12" data-top="560" style="width:118px;height:118px;right:12px;top:560px;transform:rotate(-9deg);opacity:0.034">
+    <svg viewBox="0 0 24 24"><path d="M3.5 13.2a7 5.5 0 0 1 14 0v3.3h-14z"/><path d="M6 16.5V19M15 16.5V19"/><path d="M9.5 8.4h3.6"/><circle cx="14.6" cy="12" r="0.8"/><path d="M17.5 11.4h2.2v2.8"/></svg>
+  </span>
+
+  <span class="bg-mark" data-mark="bars" data-size="100" data-angle="7" data-left="14" data-bottom="130" style="width:100px;height:100px;left:14px;bottom:130px;transform:rotate(7deg);opacity:0.03">
+    <svg viewBox="0 0 24 24"><path d="M4 20V13M9 20V8.5M14 20v-6M19 20V5"/></svg>
+  </span>
+
+</div>
+
+<div class="top-scrim" aria-hidden="true"></div>
+
+<div class="update-bar" id="update-bar" hidden>
+  <span class="update-bar__text">Доступно обновление</span>
+  <button type="button" class="update-bar__btn" id="btn-update">Обновить</button>
+</div>
+
+<div id="db-error" class="db-error" hidden></div>
+
+<!-- ЭКРАН 1: список смен -->
+<section id="screen-list" class="screen">
+  <header class="top-bar">
+    <span class="app-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="8" width="16" height="12" rx="2.5"/>
+        <path d="M8 8V6.5A2.5 2.5 0 0 1 10.5 4h3A2.5 2.5 0 0 1 16 6.5V8"/>
+        <path d="M4 12h16"/>
+        <path d="M10.6 18v-4.2h2.2a1.5 1.5 0 0 1 0 3h-3"/>
+      </svg>
+    </span>
+    <h1 class="top-bar__title">Делай Кассу</h1>
+    <button type="button" id="btn-settings" class="top-bar__action" aria-label="Настройки">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="3.2"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="content">
+
+    <!-- Панель дня -->
+    <section class="day" id="day-panel" hidden>
+      <div class="day__head">
+        <span class="day__label" id="day-label"></span>
+        <button type="button" class="day__eye-off" id="btn-hide" hidden aria-label="Скрыть суммы">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M3 3l18 18"/>
+            <path d="M10.6 5.2A9.7 9.7 0 0 1 12 5c5 0 9 4.5 9 7 0 .9-.7 2.2-1.9 3.4"/>
+            <path d="M6.5 6.9C4.3 8.3 3 10.3 3 12c0 2.5 4 7 9 7 1.6 0 3-.4 4.3-1.1"/>
+            <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+          </svg>
+        </button>
+      </div>
+
+      <button type="button" class="day__sum" id="day-sum" aria-label="Показать или скрыть суммы">
+        <span class="day__value" id="day-value" hidden></span>
+        <span class="day__hidden" id="day-hidden" hidden>
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="dot"></span><span class="dot"></span>
+          <svg class="day__eye" viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M3 12s3.6-7 9-7 9 7 9 7-3.6 7-9 7-9-7-9-7z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </span>
+      </button>
+
+      <div class="day__totals" id="day-totals"></div>
+      <div class="day__rate" id="day-rate"></div>
+
+      <div class="day__week">
+        <div class="week" id="week-bars"></div>
+        <p class="week-total">
+          <span class="week-total__head">Неделя · <span class="week-total__sum" id="week-sum"></span><span
+            class="week-total__dots" id="week-sum-dots"><i></i><i></i><i></i></span></span><span id="week-rest"></span>
+        </p>
+      </div>
+    </section>
+
+    <!-- Первый запуск: показывается, пока в базе нет ни одной смены -->
+    <div class="backup" id="backup-note" hidden>
+      <p class="backup__title">Сделайте копию</p>
+      <p class="backup__text">Записи живут только в этом телефоне. Потеряете телефон —
+        потеряете всю кассу. Копия делается за десять секунд.</p>
+      <div class="backup__actions">
+        <button type="button" class="btn btn--small" id="backup-export">Выгрузить</button>
+        <button type="button" class="btn btn--plain" id="backup-later">Потом</button>
+      </div>
+    </div>
+
+    <div class="datarow" id="data-row" hidden>
+      <button type="button" class="datarow__btn" id="row-export">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20V6"/><path d="M7 11l5-5 5 5"/><path d="M4 20h16"/>
+        </svg>
+        Выгрузить копию
+      </button>
+      <span class="datarow__dot">·</span>
+      <button type="button" class="datarow__btn" id="row-import">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 4v14"/><path d="M7 13l5 5 5-5"/><path d="M4 20h16"/>
+        </svg>
+        Загрузить
+      </button>
+    </div>
+
+    <div id="empty-state" class="intro" hidden>
+      <h2 class="intro__title">Считайте свою кассу</h2>
+      <p class="intro__sub">Полминуты после смены — и вы всегда знаете, сколько заработали.</p>
+
+      <div class="intro__cards">
+
+        <div class="intro-card">
+          <span class="intro-card__icon" style="background: var(--intro-icon-1-bg); color: var(--intro-icon-1)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round">
+              <circle cx="12" cy="12" r="8.5"/>
+              <path d="M12 7.5V12l3 2"/>
+            </svg>
+          </span>
+          <span class="intro-card__body">
+            <span class="intro-card__title">Время</span>
+            <span class="intro-card__text">Со скольки до скольки работали — часы посчитаются сами. Или впишите часы сразу.</span>
+          </span>
+        </div>
+
+        <div class="intro-card">
+          <span class="intro-card__icon" style="background: var(--intro-icon-2-bg); color: var(--intro-icon-2)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round">
+              <path d="M9 19V5h4.2a4.2 4.2 0 0 1 0 8.4H9"/>
+              <path d="M6.4 16.2H13"/>
+            </svg>
+          </span>
+          <span class="intro-card__body">
+            <span class="intro-card__title">Заказы и деньги</span>
+            <span class="intro-card__text">Сколько заказов и сколько вышло. Чаевые, километры и заметку — если захотите.</span>
+          </span>
+        </div>
+
+        <div class="intro-card">
+          <span class="intro-card__icon" style="background: var(--intro-icon-3-bg); color: var(--intro-icon-3)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 4v10"/>
+              <path d="M8 11l4 4 4-4"/>
+              <path d="M4.5 19h15"/>
+            </svg>
+          </span>
+          <span class="intro-card__body">
+            <span class="intro-card__title">Всё остаётся у вас</span>
+            <span class="intro-card__text">Без интернета и регистрации. Записи хранятся в телефоне, а выгрузить их можно в таблицу.</span>
+          </span>
+        </div>
+
+        <div class="intro-card">
+          <span class="intro-card__icon" style="background: var(--intro-icon-4-bg); color: var(--intro-icon-4)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="13.5" r="7.5"/>
+              <path d="M12 9.5v4l2.5 1.6"/>
+              <path d="M9.5 2.5h5M12 2.5v3"/>
+              <path d="M18.6 6.2l1.6-1.6"/>
+            </svg>
+          </span>
+          <span class="intro-card__body">
+            <span class="intro-card__title">Пятнадцать секунд</span>
+            <span class="intro-card__text">Ровно столько занимает запись смены. Два числа — заказы и заработок. Остальное по желанию.</span>
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <ul id="shift-list" class="shifts" hidden></ul>
+  </main>
+
+  <footer class="action-bar">
+    <button type="button" id="btn-add" class="btn btn--primary btn--xl">
+      <span class="btn__icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+             stroke-width="2.6" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </span>
+      <span id="add-label">Добавить смену</span>
+    </button>
+  </footer>
+</section>
+
+<!-- ЭКРАН 2: ввод и правка смены -->
+<section id="screen-form" class="screen" hidden>
+  <header class="top-bar">
+    <button type="button" id="btn-back" class="top-bar__back">← Отмена</button>
+    <h1 class="top-bar__title" id="form-title">Новая смена</h1>
+  </header>
+
+  <main class="content">
+    <form id="shift-form" novalidate>
+
+      <!-- Дата: три кнопки, системный выбор прячется за третьей -->
+      <div class="field">
+        <span class="label">Дата</span>
+        <div class="date-row">
+          <button type="button" class="date-btn" id="btn-today">Сегодня</button>
+          <button type="button" class="date-btn" id="btn-yesterday">Вчера</button>
+          <button type="button" class="date-btn date-btn--icon" id="btn-pick-date" aria-label="Выбрать дату">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="5" width="18" height="16" rx="3"/>
+              <path d="M3 10h18M8 3v4M16 3v4"/>
+            </svg>
+          </button>
+          <input type="date" id="f-date" name="date" class="date-native" required>
+        </div>
+        <p class="date-chosen" id="date-chosen" hidden></p>
+      </div>
+
+      <!-- Служба: одна строка, список живёт в шторке -->
+      <div class="field">
+        <span class="label">Служба</span>
+        <button type="button" class="service-row" id="service-row">
+          <span class="chip chip--lg" id="service-row-chip">₽</span>
+          <span class="service-row__name" id="service-row-name"></span>
+          <svg class="service-row__chevron" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 6l6 6-6 6"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="field-pair">
+        <div class="field">
+          <label class="label" for="f-orders">Заказы</label>
+          <input class="input" type="text" id="f-orders" name="orders"
+                 inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+                 placeholder="0" required>
+        </div>
+        <div class="field">
+          <label class="label" for="f-earnings">Заработок</label>
+          <input class="input" type="text" id="f-earnings" name="earnings"
+                 inputmode="decimal" autocomplete="off"
+                 placeholder="0" required>
+        </div>
+      </div>
+
+      <details class="more" id="more">
+        <summary class="more__summary">Подробнее</summary>
+        <div class="more__body">
+
+          <div class="field">
+            <label class="label" for="f-tips">Чаевые</label>
+            <input class="input" type="text" id="f-tips" name="tips"
+                   inputmode="decimal" autocomplete="off" placeholder="0">
+          </div>
+
+          <div class="field-pair">
+            <div class="field">
+              <label class="label" for="f-start">Начало</label>
+              <input class="input" type="time" id="f-start" name="timeStart">
+            </div>
+            <div class="field">
+              <label class="label" for="f-end">Конец</label>
+              <input class="input" type="time" id="f-end" name="timeEnd">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="f-hours">Часы</label>
+            <input class="input" type="text" id="f-hours" name="hours"
+                   inputmode="decimal" autocomplete="off" placeholder="0">
+            <p class="hint">Считаются из времени начала и конца, можно исправить.</p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="f-km">Километраж</label>
+            <input class="input" type="text" id="f-km" name="km"
+                   inputmode="decimal" autocomplete="off" placeholder="0">
+          </div>
+
+          <div class="field">
+            <label class="label" for="f-note">Заметка</label>
+            <textarea class="input input--area" id="f-note" name="note" rows="2"></textarea>
+          </div>
+
+        </div>
+      </details>
+
+    </form>
+
+    <!-- Удаление в потоке страницы, а не в панели действий,
+         чтобы его нельзя было задеть вместо «Сохранить». -->
+    <div class="delete-zone" id="delete-zone" hidden>
+      <button type="button" id="btn-delete" class="btn btn--danger">Удалить смену</button>
+    </div>
+  </main>
+
+  <footer class="action-bar">
+    <button type="submit" form="shift-form" id="btn-save" class="btn btn--primary btn--xl">
+      Сохранить
+    </button>
+    <p class="form-error" id="form-error" hidden></p>
+  </footer>
+</section>
+
+<!-- ЭКРАН 3: настройки -->
+<section id="screen-settings" class="screen" hidden>
+  <header class="top-bar">
+    <button type="button" id="btn-settings-back" class="top-bar__back">← Назад</button>
+    <h1 class="top-bar__title">Настройки</h1>
+  </header>
+
+  <main class="content">
+
+    <h2 class="section-title">Оформление</h2>
+    <div class="themes" id="themes"></div>
+
+    <h2 class="section-title">Службы</h2>
+    <ul class="services" id="services-list"></ul>
+
+    <form class="row row--add" id="service-form">
+      <input class="input input--sm" type="text" id="f-new-service" placeholder="Своя служба"
+             autocomplete="off" maxlength="40">
+      <button type="submit" class="btn btn--ghost">Добавить</button>
+    </form>
+    <p class="form-error" id="service-error" hidden></p>
+
+    <h2 class="section-title">Показ</h2>
+
+    <label class="switch">
+      <span class="switch__text">
+        Скрывать суммы
+        <span class="switch__hint">Открываются тапом по сумме дня</span>
+      </span>
+      <input type="checkbox" id="f-hide-sums">
+      <span class="switch__track"><span class="switch__knob"></span></span>
+    </label>
+
+    <h2 class="section-title">Деньги</h2>
+
+    <div class="field-pair">
+      <div class="field">
+        <label class="label" for="f-currency">Валюта</label>
+        <input class="input input--sm" type="text" id="f-currency" maxlength="8"
+               autocomplete="off" placeholder="₽">
+      </div>
+      <div class="field">
+        <label class="label" for="f-fuel">Топливо за км</label>
+        <input class="input input--sm" type="text" id="f-fuel" inputmode="decimal"
+               autocomplete="off" placeholder="0">
+      </div>
+    </div>
+    <p class="hint">Расход топлива понадобится в статистике на следующем этапе.</p>
+
+    <h2 class="section-title">Данные</h2>
+
+    <div class="data-actions">
+      <button type="button" id="btn-export-csv" class="btn btn--ghost btn--wide">
+        Таблица смен (CSV)
+      </button>
+      <p class="hint hint--tight">Открывается в Excel. Смены без настроек.</p>
+
+      <button type="button" id="btn-export-json" class="btn btn--ghost btn--wide">
+        Полная копия (JSON)
+      </button>
+      <p class="hint hint--tight">Все смены вместе с настройками и службами.
+        Для переноса на другой телефон.</p>
+      <button type="button" id="btn-import" class="btn btn--ghost btn--wide">
+        Восстановить из копии
+      </button>
+      <input type="file" id="f-import" hidden
+             accept=".json,.csv,application/json,text/csv,application/vnd.ms-excel,application/octet-stream,text/plain">
+    </div>
+
+    <p class="data-report" id="data-report" hidden></p>
+    <p class="hint">
+      Копия — единственная защита смен: очистка данных браузера стирает базу.
+      Восстановление только добавляет смены, ничего не удаляет.
+    </p>
+
+    <p class="app-version" id="app-version"></p>
+    <p class="app-version app-version--dev">Разработчик FLUXLAB</p>
+
+  </main>
+
+  <footer class="action-bar">
+    <button type="button" id="btn-settings-done" class="btn btn--primary btn--xl">
+      Готово
+    </button>
+  </footer>
+</section>
+
+<!-- ОКНО ВЫБОРА ПРИ ЗАГРУЗКЕ ФАЙЛА -->
+<div class="modal" id="import-dialog" hidden>
+  <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="import-title">
+    <p class="modal__title" id="import-title"></p>
+    <p class="modal__text" id="import-text"></p>
+    <div class="modal__actions">
+      <button type="button" class="btn btn--small" id="import-add">Добавить</button>
+      <button type="button" class="btn btn--small btn--wipe" id="import-replace">Заменить всё</button>
+      <button type="button" class="btn btn--plain" id="import-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- ШТОРКА ВЫБОРА СЛУЖБЫ -->
+<div class="sheet-backdrop" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-label="Выбор службы">
+    <span class="sheet__handle"></span>
+    <div class="sheet__head">
+      <button type="button" class="sheet__nav" id="sheet-back" aria-label="Назад" hidden>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <h2 class="sheet__title" id="sheet-title">Где работаем?</h2>
+      <button type="button" class="sheet__nav" id="sheet-close" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="sheet__body" id="sheet-body"></div>
+  </div>
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

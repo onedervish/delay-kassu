@@ -1,0 +1,2296 @@
+/* Делай Кассу — оформление. Один файл, без сборки. */
+
+/* --- Шрифты: локальные Unbounded (заголовки) и Onest (текст) --- */
+
+@font-face {
+  font-family: 'Unbounded';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url('../fonts/unbounded-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: 'Unbounded';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url('../fonts/unbounded-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Onest';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('../fonts/onest-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: 'Onest';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('../fonts/onest-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Градиенты всех четырёх схем лежат здесь и доступны всегда: их берут
+   и фон страницы текущей схемы, и плашки выбора в настройках, где надо
+   показать чужую схему, не переключая приложение. */
+:root {
+  --scheme-glubina:
+    radial-gradient(circle at 20% -10%, rgba(180, 255, 244, 0.55), transparent 70%),
+    linear-gradient(178deg, #8FEEE1 0%, #2FBCAD 8%, #0F8781 22%, #0A5E62 58%, #07343D 100%);
+  --scheme-laguna:
+    radial-gradient(circle at 112% -12%, rgba(255, 255, 255, 0.45), transparent 70%),
+    radial-gradient(circle at 12% 108%, rgba(47, 214, 189, 0.30), transparent 68%),
+    linear-gradient(172deg, #A9F2E6 0%, #5FD8C6 22%, #1AA294 52%, #0C6A66 78%, #08423F 100%);
+  --scheme-myata:
+    linear-gradient(180deg, #F2FEFA 0%, #D8F7EF 34%, #A8EADC 68%, #63D2C2 100%);
+  --scheme-indigo:
+    radial-gradient(circle at 108% -10%, rgba(255, 255, 255, 0.50), transparent 70%),
+    linear-gradient(176deg, #C7F6EF 0%, #62D6CE 22%, #1E9AA8 52%, #155C82 78%, #132F53 100%);
+}
+
+/* ЦВЕТА ПРИЛОЖЕНИЯ — ВСЕ ЗДЕСЬ, ЧЕТЫРЬМЯ СХЕМАМИ.
+   Схема выбирается атрибутом data-theme на корневом элементе. Ниже по файлу
+   нет ни одной переменной цвета. Имена по смыслу, а не по цвету.
+   Три места намеренно остались значениями и переменных не знают: запасные
+   стили в шапке index.html, аварийный экран и оранжевая полоса «оформление
+   не загрузилось». Они рисуются тогда, когда этот файл не доехал.
+
+   Четырнадцать основных значений каждой схемы — от дизайнера. Остальные
+   выведены из них по правилам: тени, кнопка, фоновый декор, поверхности.
+   Две поправки к значениям дизайнера сделаны по расчёту контраста:
+   на Глубине и Индиго карточка плотнее (.50 и .65 вместо .30 и .34), иначе
+   белый текст на ней в верхней, самой светлой части фона давал 2,8–4,1;
+   и --muted-2 поднят до .87/.74/.69/.80 — мелкие подписи вроде дней недели
+   иначе не дотягивали до 4,5. Кнопка Мяты уведена в тёмную мяту: у неё
+   белый текст, а на светлом мятном градиенте он давал 2,5. */
+:root {
+  /* --- Фон --- */
+  --bg-deep:    #07343D;
+  --bg-top:     #8FEEE1;
+  --bg-scheme: var(--scheme-glubina);
+  --bg-glow-1:  rgba(62, 221, 196, 0.26);
+  --bg-glow-2:  rgba(207, 255, 246, 0.1);
+  --bg-glow-3:  rgba(23, 180, 162, 0.2);
+  --bg-glow-4:  rgba(62, 221, 196, 0.15);
+  --bg-blob-1:  rgba(62, 221, 196, 0.12);
+  --bg-blob-2:  rgba(23, 180, 162, 0.12);
+  --bg-blob-3:  rgba(62, 221, 196, 0.1);
+  --bg-blob-4:  rgba(207, 255, 246, 0.08);
+  --bg-shape:       rgba(143, 238, 225, 0.08);
+  --bg-shape-fill:  rgba(62, 221, 196, 0.04);
+  --bg-tri-fill:    rgba(143, 238, 225, 0.03);
+  --bg-hex-fill:    rgba(143, 238, 225, 0.028);
+  --bg-hatch:       rgba(143, 238, 225, 0.018);
+  /* Знак несёт свою прозрачность в разметке (~4%), поэтому цвет здесь плотный. */
+  --bg-mark:        #8FEEE1;
+  --bg-arc-1: rgba(255, 255, 255, 0.12);
+  --bg-arc-2: rgba(255, 255, 255, 0.09);
+  --bg-arc-3: rgba(255, 255, 255, 0.12);
+  --bg-arc-4: rgba(255, 255, 255, 0.09);
+
+  /* --- Поверхности и линии --- */
+  --surface:      rgba(4, 48, 47, 0.5);
+  --surface-2:    rgba(4,48,47,.44);
+  --line:         rgba(255,255,255,.24);
+  --line-soft:    rgba(255,255,255,.12);
+  --scrim-top:     rgba(7, 52, 61, 0.72);
+  --scrim-top-end: rgba(7, 52, 61, 0);
+  --panel-a:       rgba(62, 221, 196, 0.2);
+  --panel-b:       rgba(4, 48, 47, 0.66);
+  --panel-border:  rgba(255,255,255,.24);
+  --intro-card-bg: rgba(4, 48, 47, 0.5);
+  --shift-surface: rgba(4, 48, 47, 0.52);
+  /* Шторка и окно непрозрачны: сквозь них не должно просвечивать
+     то, что лежит под ними. Цвет — surface-2, положенный на фон. */
+  --sheet-a:       #063237;
+  --sheet-b:       #07343D;
+  --sheet-border:  rgba(255,255,255,.24);
+  --handle:        rgba(211, 242, 236, 0.3);
+  --modal-a:       #063237;
+  --modal-b:       #07343D;
+  --modal-border:  rgba(255,255,255,.24);
+  --backdrop:       rgba(2, 14, 18, 0.6);
+  --backdrop-modal: rgba(2, 14, 18, 0.66);
+  --row-on-bg:     rgba(62, 221, 196, 0.14);
+  --switch-track:  rgba(211, 242, 236, 0.16);
+  --swatch-dash:   rgba(211, 242, 236, 0.3);
+  --backup-bg:     rgba(62, 221, 196, 0.1);
+  --backup-border: rgba(62, 221, 196, 0.28);
+
+  /* --- Текст --- */
+  --text:        #FFFFFF;
+  --muted:       #D3F2EC;
+  --muted-2:     rgba(255, 255, 255, 0.87);
+  --intro-sub:   #D3F2EC;
+  --placeholder: rgba(255, 255, 255, 0.87);
+
+  /* --- Акцент --- */
+  --accent:     #3EDDC4;
+  --accent-a:   #CFFFF6;
+  --accent-b:   #17B4A2;
+  --accent-ink: #04302F;
+  --mark-bg:       rgba(62, 221, 196, 0.14);
+  --mark-border:   rgba(62, 221, 196, 0.35);
+  --week-bar:      rgba(211, 242, 236, 0.2);
+  --week-label-on: #3EDDC4;
+  --svc-rgb-default: 62, 221, 196;
+  --dots:      rgba(211, 242, 236, 0.28);
+  --dots-soft: rgba(211, 242, 236, 0.24);
+
+  /* --- Главная кнопка --- */
+  --btn-a: #CFFFF6;
+  --btn-b: #73DACC;
+  --btn-c: #17B4A2;
+  --btn-border:       #04302F;
+  --btn-ink:          #04302F;
+  --btn-border-inner: rgba(4, 48, 47, 0.2);
+  --btn-rib:          rgba(4, 48, 47, 0.28);
+  --btn-gloss:     rgba(255, 255, 255, 0.55);
+  --btn-gloss-end: rgba(255, 255, 255, 0);
+  --btn-gloss-top: rgba(255, 255, 255, 0.38);
+  --btn-edge:      rgba(255, 255, 255, 0.45);
+  --btn-icon-bg:   rgba(4, 48, 47, 0.14);
+
+  /* --- Тени --- */
+  --shadow-card:       rgba(0, 0, 0, 0.38);
+  --shadow-btn-near:   rgba(0, 0, 0, 0.30);
+  --shadow-btn-sm-near: rgba(0, 0, 0, 0.28);
+  --shadow-sheet: rgba(0, 0, 0, 0.6);
+  --shadow-modal: rgba(0, 0, 0, 0.6);
+  --shadow-btn-far:    rgba(23, 180, 162, 0.22);
+  --shadow-btn-wide:   rgba(23, 180, 162, 0.2);
+  --shadow-btn-sm-far: rgba(23, 180, 162, 0.18);
+
+  /* --- Служебные --- */
+  --danger:      #FF7A66;
+  --wipe-border: rgba(255, 122, 102, 0.55);
+  --wipe-bg:     rgba(255, 122, 102, 0.12);
+  --error-bg:    #47221D;
+  --error-text:  #FFDED9;
+  --update-a:    rgba(62, 221, 196, 0.22);
+  --update-b:    rgba(4,48,47,.44);
+
+  /* --- Значки на карточках первого экрана --- */
+  --intro-icon-1:    #3EDDC4;
+  --intro-icon-1-bg: rgba(62, 221, 196, 0.16);
+  --intro-icon-2:    #31CFB9;
+  --intro-icon-2-bg: rgba(49, 207, 185, 0.16);
+  --intro-icon-3:    #24C2AD;
+  --intro-icon-3-bg: rgba(36, 194, 173, 0.16);
+  --intro-icon-4:    #17B4A2;
+  --intro-icon-4-bg: rgba(23, 180, 162, 0.16);
+}
+
+/* --- ЛАГУНА --- */
+:root[data-theme="laguna"] {
+  /* --- Фон --- */
+  --bg-deep:    #08423F;
+  --bg-top:     #A9F2E6;
+  --bg-scheme: var(--scheme-laguna);
+  --bg-glow-1:  rgba(13, 125, 115, 0.12);
+  --bg-glow-2:  rgba(185, 251, 238, 0.08);
+  --bg-glow-3:  rgba(79, 227, 201, 0.1);
+  --bg-glow-4:  rgba(13, 125, 115, 0.08);
+  --bg-blob-1:  rgba(13, 125, 115, 0.1);
+  --bg-blob-2:  rgba(79, 227, 201, 0.1);
+  --bg-blob-3:  rgba(13, 125, 115, 0.08);
+  --bg-blob-4:  rgba(185, 251, 238, 0.07);
+  --bg-shape:       rgba(5, 51, 47, 0.07);
+  --bg-shape-fill:  rgba(5, 51, 47, 0.05);
+  --bg-tri-fill:    rgba(5, 51, 47, 0.05);
+  --bg-hex-fill:    rgba(5, 51, 47, 0.05);
+  --bg-hatch:       rgba(5, 51, 47, 0.04);
+  /* Знак несёт свою прозрачность в разметке (~4%), поэтому цвет здесь плотный. */
+  --bg-mark:        #05332F;
+  --bg-arc-1: rgba(4, 50, 47, 0.09);
+  --bg-arc-2: rgba(4, 50, 47, 0.07);
+  --bg-arc-3: rgba(255, 255, 255, 0.11);
+  --bg-arc-4: rgba(255, 255, 255, 0.08);
+
+  /* --- Поверхности и линии --- */
+  --surface:      rgba(255,255,255,.72);
+  --surface-2:    rgba(255,255,255,.86);
+  --line:         rgba(255,255,255,.80);
+  --line-soft:    rgba(5,51,47,.12);
+  --scrim-top:     rgba(169, 242, 230, 0.72);
+  --scrim-top-end: rgba(8, 66, 63, 0);
+  --panel-a:       rgba(13, 125, 115, 0.2);
+  --panel-b:       rgba(255, 255, 255, 0.88);
+  --panel-border:  rgba(255,255,255,.80);
+  --intro-card-bg: rgba(255,255,255,.72);
+  --shift-surface: rgba(255, 255, 255, 0.74);
+  /* Шторка и окно непрозрачны: сквозь них не должно просвечивать
+     то, что лежит под ними. Цвет — surface-2, положенный на фон. */
+  --sheet-a:       #F3FDFC;
+  --sheet-b:       #A9F2E6;
+  --sheet-border:  rgba(255,255,255,.80);
+  --handle:        rgba(11, 79, 74, 0.3);
+  --modal-a:       #F3FDFC;
+  --modal-b:       #A9F2E6;
+  --modal-border:  rgba(255,255,255,.80);
+  --backdrop:       rgba(5, 51, 47, 0.45);
+  --backdrop-modal: rgba(5, 51, 47, 0.5);
+  --row-on-bg:     rgba(13, 125, 115, 0.14);
+  --switch-track:  rgba(11, 79, 74, 0.16);
+  --swatch-dash:   rgba(11, 79, 74, 0.3);
+  --backup-bg:     rgba(13, 125, 115, 0.1);
+  --backup-border: rgba(13, 125, 115, 0.28);
+
+  /* --- Текст --- */
+  --text:        #05332F;
+  --muted:       #0B4F4A;
+  --muted-2:     rgba(5, 51, 47, 0.77);
+  --intro-sub:   #0B4F4A;
+  --placeholder: rgba(5, 51, 47, 0.77);
+
+  /* --- Акцент --- */
+  --accent:     #0D7D73;
+  --accent-a:   #B9FBEE;
+  --accent-b:   #4FE3C9;
+  --accent-ink: #053B36;
+  --mark-bg:       rgba(13, 125, 115, 0.14);
+  --mark-border:   rgba(13, 125, 115, 0.35);
+  --week-bar:      rgba(11, 79, 74, 0.2);
+  --week-label-on: #0D7D73;
+  --svc-rgb-default: 13, 125, 115;
+  --dots:      rgba(11, 79, 74, 0.28);
+  --dots-soft: rgba(11, 79, 74, 0.24);
+
+  /* --- Главная кнопка --- */
+  --btn-a: #B9FBEE;
+  --btn-b: #84EFDC;
+  --btn-c: #4FE3C9;
+  --btn-border:       #053B36;
+  --btn-ink:          #053B36;
+  --btn-border-inner: rgba(5, 59, 54, 0.2);
+  --btn-rib:          rgba(5, 59, 54, 0.28);
+  --btn-gloss:     rgba(255, 255, 255, 0.55);
+  --btn-gloss-end: rgba(255, 255, 255, 0);
+  --btn-gloss-top: rgba(255, 255, 255, 0.38);
+  --btn-edge:      rgba(255, 255, 255, 0.45);
+  --btn-icon-bg:   rgba(5, 59, 54, 0.14);
+
+  /* --- Тени --- */
+  --shadow-card:       rgba(5, 51, 47, 0.14);
+  --shadow-btn-near:   rgba(5, 51, 47, 0.18);
+  --shadow-btn-sm-near: rgba(5, 51, 47, 0.16);
+  --shadow-sheet: rgba(5, 51, 47, 0.22);
+  --shadow-modal: rgba(5, 51, 47, 0.22);
+  --shadow-btn-far:    rgba(79, 227, 201, 0.22);
+  --shadow-btn-wide:   rgba(79, 227, 201, 0.2);
+  --shadow-btn-sm-far: rgba(79, 227, 201, 0.18);
+
+  /* --- Служебные --- */
+  --danger:      #C2321F;
+  --wipe-border: rgba(194, 50, 31, 0.55);
+  --wipe-bg:     rgba(194, 50, 31, 0.12);
+  --error-bg:    #F8E6E4;
+  --error-text:  #781F13;
+  --update-a:    rgba(13, 125, 115, 0.22);
+  --update-b:    rgba(255,255,255,.86);
+
+  /* --- Значки на карточках первого экрана --- */
+  --intro-icon-1:    #0D7D73;
+  --intro-icon-1-bg: rgba(13, 125, 115, 0.16);
+  --intro-icon-2:    #0C6E65;
+  --intro-icon-2-bg: rgba(12, 110, 101, 0.16);
+  --intro-icon-3:    #0C5E58;
+  --intro-icon-3-bg: rgba(12, 94, 88, 0.16);
+  --intro-icon-4:    #0B4F4A;
+  --intro-icon-4-bg: rgba(11, 79, 74, 0.16);
+}
+
+/* --- МЯТА --- */
+:root[data-theme="myata"] {
+  /* --- Фон --- */
+  --bg-deep:    #63D2C2;
+  --bg-top:     #F2FEFA;
+  --bg-scheme: var(--scheme-myata);
+  --bg-glow-1:  rgba(14, 156, 142, 0.12);
+  --bg-glow-2:  rgba(20, 185, 166, 0.08);
+  --bg-glow-3:  rgba(7, 115, 108, 0.1);
+  --bg-glow-4:  rgba(14, 156, 142, 0.08);
+  --bg-blob-1:  rgba(14, 156, 142, 0.1);
+  --bg-blob-2:  rgba(7, 115, 108, 0.1);
+  --bg-blob-3:  rgba(14, 156, 142, 0.08);
+  --bg-blob-4:  rgba(20, 185, 166, 0.07);
+  --bg-shape:       rgba(6, 51, 47, 0.07);
+  --bg-shape-fill:  rgba(6, 51, 47, 0.05);
+  --bg-tri-fill:    rgba(6, 51, 47, 0.05);
+  --bg-hex-fill:    rgba(6, 51, 47, 0.05);
+  --bg-hatch:       rgba(6, 51, 47, 0.04);
+  /* Знак несёт свою прозрачность в разметке (~4%), поэтому цвет здесь плотный. */
+  --bg-mark:        #06332F;
+  --bg-arc-1: rgba(4, 50, 47, 0.09);
+  --bg-arc-2: rgba(4, 50, 47, 0.07);
+  --bg-arc-3: rgba(255, 255, 255, 0.11);
+  --bg-arc-4: rgba(255, 255, 255, 0.08);
+
+  /* --- Поверхности и линии --- */
+  --surface:      rgba(255,255,255,.78);
+  --surface-2:    #FFFFFF;
+  --line:         rgba(13,125,115,.18);
+  --line-soft:    rgba(13,125,115,.10);
+  --scrim-top:     rgba(242, 254, 250, 0.72);
+  --scrim-top-end: rgba(99, 210, 194, 0);
+  --panel-a:       rgba(14, 156, 142, 0.2);
+  --panel-b:       rgba(255, 255, 255, 0.94);
+  --panel-border:  rgba(13,125,115,.18);
+  --intro-card-bg: rgba(255,255,255,.78);
+  --shift-surface: rgba(255, 255, 255, 0.8);
+  /* Шторка и окно непрозрачны: сквозь них не должно просвечивать
+     то, что лежит под ними. Цвет — surface-2, положенный на фон. */
+  --sheet-a:       #FFFFFF;
+  --sheet-b:       #F2FEFA;
+  --sheet-border:  rgba(13,125,115,.18);
+  --handle:        rgba(11, 90, 83, 0.3);
+  --modal-a:       #FFFFFF;
+  --modal-b:       #F2FEFA;
+  --modal-border:  rgba(13,125,115,.18);
+  --backdrop:       rgba(6, 51, 47, 0.45);
+  --backdrop-modal: rgba(6, 51, 47, 0.5);
+  --row-on-bg:     rgba(14, 156, 142, 0.14);
+  --switch-track:  rgba(11, 90, 83, 0.16);
+  --swatch-dash:   rgba(11, 90, 83, 0.3);
+  --backup-bg:     rgba(14, 156, 142, 0.1);
+  --backup-border: rgba(14, 156, 142, 0.28);
+
+  /* --- Текст --- */
+  --text:        #06332F;
+  --muted:       #0B5A53;
+  --muted-2:     rgba(6, 51, 47, 0.69);
+  --intro-sub:   #0B5A53;
+  --placeholder: rgba(6, 51, 47, 0.69);
+
+  /* --- Акцент --- */
+  --accent:     #0E9C8E;
+  --accent-a:   #14B9A6;
+  --accent-b:   #07736C;
+  --accent-ink: #FFFFFF;
+  --mark-bg:       rgba(14, 156, 142, 0.14);
+  --mark-border:   rgba(14, 156, 142, 0.35);
+  --week-bar:      rgba(11, 90, 83, 0.2);
+  --week-label-on: #0E9C8E;
+  --svc-rgb-default: 14, 156, 142;
+  --dots:      rgba(11, 90, 83, 0.28);
+  --dots-soft: rgba(11, 90, 83, 0.24);
+
+  /* --- Главная кнопка --- */
+  --btn-a: #0A776D;
+  --btn-b: #08645D;
+  --btn-c: #05524D;
+  --btn-border:       #07736C;
+  --btn-ink:          #FFFFFF;
+  --btn-border-inner: rgba(7, 115, 108, 0.2);
+  --btn-rib:          rgba(7, 115, 108, 0.28);
+  --btn-gloss:     rgba(255, 255, 255, 0.275);
+  --btn-gloss-end: rgba(255, 255, 255, 0);
+  --btn-gloss-top: rgba(255, 255, 255, 0.19);
+  --btn-edge:      rgba(255, 255, 255, 0.225);
+  --btn-icon-bg:   rgba(255, 255, 255, 0.14);
+
+  /* --- Тени --- */
+  --shadow-card:       rgba(5, 51, 47, 0.14);
+  --shadow-btn-near:   rgba(5, 51, 47, 0.18);
+  --shadow-btn-sm-near: rgba(5, 51, 47, 0.16);
+  --shadow-sheet: rgba(5, 51, 47, 0.22);
+  --shadow-modal: rgba(5, 51, 47, 0.22);
+  --shadow-btn-far:    rgba(7, 115, 108, 0.22);
+  --shadow-btn-wide:   rgba(7, 115, 108, 0.2);
+  --shadow-btn-sm-far: rgba(7, 115, 108, 0.18);
+
+  /* --- Служебные --- */
+  --danger:      #C2321F;
+  --wipe-border: rgba(194, 50, 31, 0.55);
+  --wipe-bg:     rgba(194, 50, 31, 0.12);
+  --error-bg:    #F8E6E4;
+  --error-text:  #781F13;
+  --update-a:    rgba(14, 156, 142, 0.22);
+  --update-b:    #FFFFFF;
+
+  /* --- Значки на карточках первого экрана --- */
+  --intro-icon-1:    #0E9C8E;
+  --intro-icon-1-bg: rgba(14, 156, 142, 0.16);
+  --intro-icon-2:    #0D867A;
+  --intro-icon-2-bg: rgba(13, 134, 122, 0.16);
+  --intro-icon-3:    #0C7067;
+  --intro-icon-3-bg: rgba(12, 112, 103, 0.16);
+  --intro-icon-4:    #0B5A53;
+  --intro-icon-4-bg: rgba(11, 90, 83, 0.16);
+}
+
+/* --- ИНДИГО --- */
+:root[data-theme="indigo"] {
+  /* --- Фон --- */
+  --bg-deep:    #132F53;
+  --bg-top:     #C7F6EF;
+  --bg-scheme: var(--scheme-indigo);
+  --bg-glow-1:  rgba(53, 216, 198, 0.26);
+  --bg-glow-2:  rgba(182, 251, 240, 0.1);
+  --bg-glow-3:  rgba(23, 168, 184, 0.2);
+  --bg-glow-4:  rgba(53, 216, 198, 0.15);
+  --bg-blob-1:  rgba(53, 216, 198, 0.12);
+  --bg-blob-2:  rgba(23, 168, 184, 0.12);
+  --bg-blob-3:  rgba(53, 216, 198, 0.1);
+  --bg-blob-4:  rgba(182, 251, 240, 0.08);
+  --bg-shape:       rgba(199, 246, 239, 0.08);
+  --bg-shape-fill:  rgba(53, 216, 198, 0.04);
+  --bg-tri-fill:    rgba(199, 246, 239, 0.03);
+  --bg-hex-fill:    rgba(199, 246, 239, 0.028);
+  --bg-hatch:       rgba(199, 246, 239, 0.018);
+  /* Знак несёт свою прозрачность в разметке (~4%), поэтому цвет здесь плотный. */
+  --bg-mark:        #C7F6EF;
+  --bg-arc-1: rgba(255, 255, 255, 0.12);
+  --bg-arc-2: rgba(255, 255, 255, 0.09);
+  --bg-arc-3: rgba(255, 255, 255, 0.12);
+  --bg-arc-4: rgba(255, 255, 255, 0.09);
+
+  /* --- Поверхности и линии --- */
+  --surface:      rgba(6, 38, 58, 0.65);
+  --surface-2:    rgba(6,38,58,.48);
+  --line:         rgba(255,255,255,.22);
+  --line-soft:    rgba(255,255,255,.12);
+  --scrim-top:     rgba(19, 47, 83, 0.72);
+  --scrim-top-end: rgba(19, 47, 83, 0);
+  --panel-a:       rgba(53, 216, 198, 0.2);
+  --panel-b:       rgba(6, 38, 58, 0.81);
+  --panel-border:  rgba(255,255,255,.22);
+  --intro-card-bg: rgba(6, 38, 58, 0.65);
+  --shift-surface: rgba(6, 38, 58, 0.67);
+  /* Шторка и окно непрозрачны: сквозь них не должно просвечивать
+     то, что лежит под ними. Цвет — surface-2, положенный на фон. */
+  --sheet-a:       #0D2B47;
+  --sheet-b:       #132F53;
+  --sheet-border:  rgba(255,255,255,.22);
+  --handle:        rgba(207, 234, 242, 0.3);
+  --modal-a:       #0D2B47;
+  --modal-b:       #132F53;
+  --modal-border:  rgba(255,255,255,.22);
+  --backdrop:       rgba(2, 14, 18, 0.6);
+  --backdrop-modal: rgba(2, 14, 18, 0.66);
+  --row-on-bg:     rgba(53, 216, 198, 0.14);
+  --switch-track:  rgba(207, 234, 242, 0.16);
+  --swatch-dash:   rgba(207, 234, 242, 0.3);
+  --backup-bg:     rgba(53, 216, 198, 0.1);
+  --backup-border: rgba(53, 216, 198, 0.28);
+
+  /* --- Текст --- */
+  --text:        #FFFFFF;
+  --muted:       #CFEAF2;
+  --muted-2:     rgba(255, 255, 255, 0.8);
+  --intro-sub:   #CFEAF2;
+  --placeholder: rgba(255, 255, 255, 0.8);
+
+  /* --- Акцент --- */
+  --accent:     #35D8C6;
+  --accent-a:   #B6FBF0;
+  --accent-b:   #17A8B8;
+  --accent-ink: #052F38;
+  --mark-bg:       rgba(53, 216, 198, 0.14);
+  --mark-border:   rgba(53, 216, 198, 0.35);
+  --week-bar:      rgba(207, 234, 242, 0.2);
+  --week-label-on: #35D8C6;
+  --svc-rgb-default: 53, 216, 198;
+  --dots:      rgba(207, 234, 242, 0.28);
+  --dots-soft: rgba(207, 234, 242, 0.24);
+
+  /* --- Главная кнопка --- */
+  --btn-a: #B6FBF0;
+  --btn-b: #66D2D4;
+  --btn-c: #17A8B8;
+  --btn-border:       #052F38;
+  --btn-ink:          #052F38;
+  --btn-border-inner: rgba(5, 47, 56, 0.2);
+  --btn-rib:          rgba(5, 47, 56, 0.28);
+  --btn-gloss:     rgba(255, 255, 255, 0.55);
+  --btn-gloss-end: rgba(255, 255, 255, 0);
+  --btn-gloss-top: rgba(255, 255, 255, 0.38);
+  --btn-edge:      rgba(255, 255, 255, 0.45);
+  --btn-icon-bg:   rgba(5, 47, 56, 0.14);
+
+  /* --- Тени --- */
+  --shadow-card:       rgba(0, 0, 0, 0.38);
+  --shadow-btn-near:   rgba(0, 0, 0, 0.30);
+  --shadow-btn-sm-near: rgba(0, 0, 0, 0.28);
+  --shadow-sheet: rgba(0, 0, 0, 0.6);
+  --shadow-modal: rgba(0, 0, 0, 0.6);
+  --shadow-btn-far:    rgba(23, 168, 184, 0.22);
+  --shadow-btn-wide:   rgba(23, 168, 184, 0.2);
+  --shadow-btn-sm-far: rgba(23, 168, 184, 0.18);
+
+  /* --- Служебные --- */
+  --danger:      #FF7A66;
+  --wipe-border: rgba(255, 122, 102, 0.55);
+  --wipe-bg:     rgba(255, 122, 102, 0.12);
+  --error-bg:    #47221D;
+  --error-text:  #FFDED9;
+  --update-a:    rgba(53, 216, 198, 0.22);
+  --update-b:    rgba(6,38,58,.48);
+
+  /* --- Значки на карточках первого экрана --- */
+  --intro-icon-1:    #35D8C6;
+  --intro-icon-1-bg: rgba(53, 216, 198, 0.16);
+  --intro-icon-2:    #2BC8C1;
+  --intro-icon-2-bg: rgba(43, 200, 193, 0.16);
+  --intro-icon-3:    #21B8BD;
+  --intro-icon-3-bg: rgba(33, 184, 189, 0.16);
+  --intro-icon-4:    #17A8B8;
+  --intro-icon-4-bg: rgba(23, 168, 184, 0.16);
+}
+
+/* Размеры схемой не меняются и живут отдельно от цветов. */
+:root {
+  --tap: 72px;
+  --pad: 16px;
+}
+
+* { box-sizing: border-box; }
+
+/* Классы с display перебивали скрытие атрибутом hidden — возвращаем приоритет. */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(1200px 900px at 100% 0%,  var(--bg-glow-1), transparent 58%),
+    radial-gradient(760px 560px at 8% 6%,     var(--bg-glow-2), transparent 60%),
+    radial-gradient(900px 700px at 0% 42%,    var(--bg-glow-3), transparent 60%),
+    radial-gradient(1000px 800px at 52% 118%, var(--bg-glow-4), transparent 62%),
+    /* Слои схемы: подсветки и основной градиент лежат одной переменной —
+       у каждой схемы свой угол и свои точки, по кускам их не разложить. */
+    var(--bg-scheme);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: Onest, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Цифры одинаковой ширины — суммы не дёргаются при смене значения */
+.day__value, .shift__total, .input, .week__labels { font-variant-numeric: tabular-nums; }
+
+/* --- Фоновый слой: пятна, геометрия, штриховка, знаки --- */
+
+.bg {
+  /* display нужен явно: в запасных стилях слой отключён, иначе без внешнего
+     файла его знаки текут как обычный текст и выталкивают приложение вниз. */
+  display: block;
+  position: fixed;
+  /* Длинная запись рядом с inset: он появился только в 2020-м. */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  /* Знаки расставляет скрипт — до его первого прохода слой не показываем,
+     иначе при открытии видно, как они переезжают. */
+  visibility: hidden;
+}
+
+.bg.is-ready { visibility: visible; }
+
+.bg > span { position: absolute; }
+
+/* Слой 2 — размытые пятна */
+.bg-blob { border-radius: 50%; }
+
+/* Слой 3 — геометрия */
+.bg-sq {
+  border-radius: 22%;
+  border: 1px solid var(--bg-shape);
+}
+
+.bg-sq--fill { background: var(--bg-shape-fill); }
+
+.bg-circle {
+  border-radius: 50%;
+  border: 1px solid var(--bg-shape);
+}
+
+.bg-tri {
+  background: var(--bg-tri-fill);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.bg-hex {
+  background: var(--bg-hex-fill);
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.bg-lines {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  inset: 0;
+  background-image: repeating-linear-gradient(122deg,
+    var(--bg-hatch) 0 1px, transparent 1px 34px);
+}
+
+/* Слой 3.5 — дуги. Геометрический каркас фона. Размеры через min(), чтобы на узком
+   экране ужимались, а на широком оставались такими, как задумано. Слой .bg
+   имеет фиксированное положение и обрезку по краю окна, поэтому дуги не
+   создают прокрутки и не ловят нажатия. */
+.bg-arc {
+  border-radius: 50%;
+  border-style: solid;
+  border-width: 1.5px;
+}
+
+.bg-arc--1 {
+  width: min(300px, 78vw);
+  height: min(300px, 78vw);
+  top: 150px;
+  left: max(-120px, -31vw);
+  border-color: var(--bg-arc-1);
+}
+
+.bg-arc--2 {
+  width: min(208px, 54vw);
+  height: min(208px, 54vw);
+  top: 196px;
+  left: max(-74px, -19vw);
+  border-color: var(--bg-arc-2);
+}
+
+.bg-arc--3 {
+  width: min(260px, 67vw);
+  height: min(260px, 67vw);
+  bottom: 90px;
+  right: max(-96px, -25vw);
+  border-color: var(--bg-arc-3);
+}
+
+.bg-arc--4 {
+  width: min(172px, 44vw);
+  height: min(172px, 44vw);
+  bottom: 140px;
+  right: max(-52px, -13vw);
+  border-color: var(--bg-arc-4);
+}
+
+/* Слой 4 — тематические знаки: текстура, а не рисунок */
+.bg-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--bg-mark);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bg-mark--ruble {
+  font-weight: 800;
+  line-height: 1;
+  color: var(--bg-mark);
+}
+
+/* --- Каркас экрана --- */
+
+.screen {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  /* Сначала vh, следом dvh: на телефоне 100vh не учитывает нижнюю панель
+     браузера, и содержимое считается влезающим, хотя выходит за экран.
+     Старый движок не поймёт вторую строку и возьмёт первую. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.screen[hidden] { display: none; }
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+}
+
+/* Подложка под шапкой: гасит фон под названием, край растворяется. */
+.top-scrim {
+  /* display нужен явно: запасные стили в шапке гасят подложку заодно с фоном,
+     и без этой строки она не возвращалась даже с внешним файлом. */
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--scrim-top), var(--scrim-top-end));
+}
+
+/* Знак в шапке рисованный: фотографическая иконка в 40 пикселях не читалась. */
+.app-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 12px;
+  background: var(--mark-bg);
+  border: 1px solid var(--mark-border);
+  color: var(--accent);
+  margin-right: 12px;
+}
+
+/* Заголовки экранов — Unbounded, тексты — Onest */
+.top-bar__title {
+  margin: 0;
+  font-family: Unbounded, 'Arial Black', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Название приложения чуть мельче: Unbounded широкий, иначе жмёт шестерёнку */
+#screen-list .top-bar__title { font-size: 17px; }
+
+.top-bar__back {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 17px;
+  padding: 8px 8px 8px 0;
+  cursor: pointer;
+}
+
+.top-bar__action {
+  margin-left: auto;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.content {
+  flex: 1;
+  padding: 0 var(--pad) 130px;
+}
+
+/* Первому экрану нужно, чтобы контейнер умел растягиваться по высоте. */
+#screen-list .content {
+  display: flex;
+  flex-direction: column;
+  /* Зазор до кнопки складывается с верхним отступом её панели (12),
+     в сумме — 16 от последней карточки. */
+  padding-bottom: 4px;
+}
+
+/* Пока показывается первый экран, страница не растёт: блок сам прокручивается
+   внутри, если содержимое не помещается. min-height: 0 обязателен — без него
+   флекс-элемент не даёт себя сжать и выталкивает страницу. */
+body.is-onboarding #screen-list {
+  height: 100vh;
+  height: 100dvh;   /* та же пара: запасной вариант остаётся рядом */
+}
+
+body.is-onboarding #screen-list .content {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+body.is-onboarding #screen-list .action-bar { padding-top: 0; }
+
+.action-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 12px var(--pad) calc(14px + env(safe-area-inset-bottom));
+  /* Заливки нет намеренно: на бирюзовой части фона она читалась как
+     грязный прямоугольник. Список держит отступ снизу у .content. */
+}
+
+/* --- Кнопки --- */
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 18px;
+  border: 0;
+  border-radius: 18px;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn--primary {
+  gap: 12px;
+  /* Насечки занимают полосу 14–26 пикселей от каждого края. Содержимое
+     кнопки не должно в неё заходить ни при каком тексте, поэтому поля
+     начинаются за насечками. Сами насечки при этом не двигаются. */
+  padding-left: 30px;
+  padding-right: 30px;
+  /* На узком экране «Записать первую смену» не влезало в строку и уезжало
+     на насечки. Кегль уменьшается вместе с шириной, но не ниже 18. */
+  font-size: clamp(18px, 4.9vw, 22px);
+}
+
+.btn--primary {
+  position: relative;
+  /* Отсвет из левого верхнего угла поверх основного перехода. */
+  background-image:
+    radial-gradient(120% 140% at 12% 0%, var(--btn-gloss), var(--btn-gloss-end) 46%),
+    linear-gradient(135deg, var(--btn-a) 0%, var(--btn-b) 42%, var(--btn-c) 100%);
+  /* Рамка тёмная, в тон тексту: даёт вырезанный силуэт на любом фоне. */
+  border: 2px solid var(--btn-border);
+  color: var(--btn-ink);
+  box-shadow:
+    inset 0 0 0 1px var(--btn-edge),
+    inset 0 1px 0 var(--btn-gloss-top),
+    0 2px 6px var(--shadow-btn-near),
+    0 6px 14px var(--shadow-btn-far),
+    0 14px 30px var(--shadow-btn-wide);
+  transition: transform 120ms linear, box-shadow 120ms linear;
+}
+
+/* Внутренний контур тёмный — он и даёт ощущение выточенной кнопки. */
+.btn--primary::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  inset: 6px;
+  border: 1px solid var(--btn-border-inner);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+/* Рифление по краям — как насечка на ребре монеты. Псевдоэлементов у кнопки
+   всего два, поэтому обе полосы рисуем слоями фона одного элемента. */
+.btn--primary::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 21%;
+  height: 58%;
+  background-image:
+    repeating-linear-gradient(90deg, var(--btn-rib) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(90deg, var(--btn-rib) 0 2px, transparent 2px 5px);
+  background-size: 12px 100%;
+  background-position: left center, right center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* Вдавливание при нажатии; в покое ничего не движется. */
+.btn--primary:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 0 0 1px var(--btn-edge),
+    inset 0 1px 0 var(--btn-gloss-top),
+    0 2px 6px var(--shadow-btn-near),
+    0 3px 7px var(--shadow-btn-far),
+    0 7px 15px var(--shadow-btn-wide);
+}
+
+/* Значок сидит в кружке, а не висит в воздухе. */
+.btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+  background: var(--btn-icon-bg);
+}
+
+.btn--ghost {
+  width: auto;
+  min-height: 56px;
+  padding: 0 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.btn--wide { width: 100%; }
+
+.btn--danger {
+  min-height: 56px;
+  border: 1px solid var(--danger);
+  border-radius: 16px;
+  background: none;
+  color: var(--danger);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* --- Панель дня --- */
+
+.day {
+  margin: 4px 0 18px;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 18px 46px var(--shadow-card);
+  background: linear-gradient(158deg, var(--panel-a), var(--panel-b) 58%);
+}
+
+.day__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Высота строки фиксирована: иконка глаза появляется, панель не дёргается. */
+  height: 19px;
+}
+
+.day__label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
+.day__eye-off {
+  position: relative;
+  display: flex;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--muted-2);
+  cursor: pointer;
+}
+
+/* Значок 19 пикселей, палец — 44: зону растим невидимо, чтобы не поехала
+   строка с датой, у которой высота зафиксирована. */
+.day__eye-off::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+/* Высота одна и та же в обоих состояниях — при переключении ничего не прыгает */
+.day__sum {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 62px;
+  margin-top: 2px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.day__value {
+  font-family: Unbounded, 'Arial Black', system-ui, sans-serif;
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.day__hidden {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.day__hidden .dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--dots);
+}
+
+.day__eye { color: var(--muted); margin-left: 4px; }
+
+.day__totals {
+  margin-top: 8px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.day__week {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.week {
+  display: flex;
+  align-items: stretch;
+  /* Промежутка между колонками нет намеренно: зоны нажатия идут вплотную,
+     чтобы палец не попадал в мёртвую полосу. Просвет между столбиками даёт
+     внутренний отступ колонки. */
+  gap: 0;
+  /* 40 под столбик, 6 промежуток, остальное под подпись: иначе флекс
+     поджимает самый высокий столбик и пропорция врёт. */
+  height: 64px;
+}
+
+/* Нажимается вся колонка, а не закрашенный прямоугольник: иначе в день
+   с маленьким заработком пришлось бы целиться в полоску в два пикселя. */
+.week__col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 3.5px;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.week__bar {
+  width: 100%;
+  flex: none;
+  border-radius: 3px;
+  background: var(--week-bar);
+  transition: background-color 140ms linear;
+}
+
+/* День без денег — тонкая полоска, акцентом не заливается даже выбранный. */
+.week__bar--empty { background: var(--line); }
+
+.week__label {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted-2);
+  transition: color 140ms linear;
+}
+
+.week__col--on .week__bar:not(.week__bar--empty) { background: var(--accent); }
+
+.week__col--on .week__label {
+  font-weight: 600;
+  color: var(--week-label-on);
+}
+
+/* Итог за неделю: всегда на месте, прячется только сумма */
+.week-total {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.week-total__head { white-space: nowrap; }
+
+.week-total__sum {
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-total__dots {
+  display: inline-flex;
+  gap: 5px;
+  vertical-align: middle;
+}
+
+.week-total__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dots);
+}
+
+/* Ставка за час и за заказ */
+.day__rate {
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* --- Экран первого запуска --- */
+
+/* Свободное место распределяется, а не копится внизу: промежутки дышат по высоте окна. */
+.intro {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* Заголовок прижат к шапке, остаток высоты забирают карточки. */
+  justify-content: flex-start;
+  padding: clamp(12px, 2.4vh, 46px) 0 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+/* Полоса прокрутки блока только мешает: содержимое почти всегда влезает. */
+.intro::-webkit-scrollbar { display: none; }
+
+.intro__title {
+  margin: 0;
+  font-family: Unbounded, 'Arial Black', system-ui, sans-serif;
+  font-size: clamp(15px, min(3.2vh, 5.2vw), 22px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Балансировка переносов убирает одинокое слово на последней строке. */
+.intro__sub {
+  margin: 10px auto 0;
+  max-width: 320px;
+  font-size: clamp(14.5px, 2.2vh, 18px);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--intro-sub);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* Карточки — плотная группа по центру свободного места. Собственного
+   отступа сверху нет: иначе расстояния над группой и под ней разъедутся. */
+.intro__cards {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(4px, 1.4vh, 16px) 0;
+  gap: clamp(9px, 1.1vh, 30px);
+}
+
+/* На широком экране карточки короче — там и появляется место под воздух. */
+@media (min-width: 700px) {
+  .intro__cards { gap: clamp(9px, 3.2vh, 30px); }
+}
+
+.intro-card {
+  display: flex;
+  gap: clamp(9px, 1.7vh, 14px);
+  align-items: flex-start;
+  padding: clamp(10px, 1.4vh, 11px);
+  border-radius: 16px;
+  background: var(--intro-card-bg);
+  border: 1px solid var(--line);
+}
+
+.intro-card__icon {
+  flex: 0 0 clamp(32px, 4.6vh, 40px);
+  width: clamp(32px, 4.6vh, 40px);
+  height: clamp(32px, 4.6vh, 40px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.intro-card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.intro-card__title {
+  display: block;
+  font-size: clamp(15px, 2vh, 17px);
+  font-weight: 700;
+}
+
+.intro-card__text {
+  display: block;
+  margin-top: 4px;
+  font-size: clamp(12.5px, 1.72vh, 14.5px);
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* Ниже 700 пикселей подзаголовок уступает место четырём блокам:
+   он повторяет то, что и так сказано в карточках. Отступы там же ужимаются:
+   без этого четыре карточки перестают влезать. */
+@media (max-height: 699px) {
+  /* Подзаголовок не прячется никогда: это главная фраза экрана.
+     На низком экране он не исчезает, а ужимается. */
+  .intro__sub {
+    font-size: clamp(13px, 1.9vh, 15px);
+    margin-top: 8px;
+    line-height: 1.35;
+  }
+  .intro { padding-top: clamp(2px, 0.9vh, 10px); }
+  /* Поля карточек отдают место подзаголовку; кегль текста не трогаем.
+     Нижний отступ держит зазор до кнопки, иначе карточка упирается в неё. */
+  .intro-card { padding: 8px 10px; }
+  .intro__cards {
+    padding: 0 0 8px;
+    gap: 9px;
+  }
+}
+
+/* Совсем низкий экран (320×568 и подобные): отдаём последние пиксели
+   отступами, шрифты не трогаем. */
+@media (max-height: 599px) {
+  .intro-card { padding: 6px 10px; gap: 8px; }
+  /* Плотнее ведём строки и отступы, кегль не трогаем. */
+  .intro-card__title { line-height: 1.2; }
+  .intro-card__text { line-height: 1.3; margin-top: 2px; }
+  .intro__cards { padding: 0 0 8px; gap: 5px; }
+  .intro { padding-top: 0; }
+  body.is-onboarding #screen-list .action-bar {
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  }
+}
+
+/* --- Выбор схемы оформления --- */
+
+.themes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0 0 10px;
+}
+
+.theme {
+  display: block;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme--on { border-color: var(--accent); }
+
+.theme__preview {
+  position: relative;
+  display: block;
+  height: 64px;
+  border-radius: 12px;
+  border: 1px solid var(--line-soft);
+}
+
+/* Плашка показывает чужую схему, поэтому берёт её градиент напрямую. */
+.theme__preview--glubina { background: var(--scheme-glubina); }
+.theme__preview--laguna  { background: var(--scheme-laguna); }
+.theme__preview--myata   { background: var(--scheme-myata); }
+.theme__preview--indigo  { background: var(--scheme-indigo); }
+
+.theme__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.theme--on .theme__check { display: flex; }
+
+.theme__name {
+  display: block;
+  padding: 6px 2px 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* --- Список смен --- */
+
+.shifts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-head {
+  margin: 12px 2px 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.day-head:first-child { margin-top: 0; }
+
+/* Обводка группы выбранного дня гаснет сама: цвет уходит в прозрачный. */
+.day-head, .shift {
+  outline: 1px solid transparent;
+  transition: outline-color 400ms linear;
+}
+
+.flash { outline-color: var(--accent); }
+
+.shift {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background:
+    repeating-linear-gradient(118deg,
+      rgba(var(--svc-rgb, var(--svc-rgb-default)), 0.05) 0 1px, transparent 1px 15px),
+    linear-gradient(96deg,
+      rgba(var(--svc-rgb, var(--svc-rgb-default)), 0.22), var(--shift-surface) 48%);
+  box-shadow: inset 16px 0 30px -20px rgb(var(--svc-rgb, var(--svc-rgb-default)));
+}
+
+.shift:active { filter: brightness(1.12); }
+
+/* Рейка службы */
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 30px;
+  flex: 0 0 30px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  /* Цвет службы приходит из кода одной тройкой чисел в --svc-rgb. */
+  background: rgba(var(--svc-rgb, var(--svc-rgb-default)), 0.18);
+  border: 1px solid rgba(var(--svc-rgb, var(--svc-rgb-default)), 0.55);
+  box-shadow: 0 0 12px rgba(var(--svc-rgb, var(--svc-rgb-default)), 0.14);
+  color: rgb(var(--svc-rgb, var(--svc-rgb-default)));
+}
+
+.chip--lg {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 11px;
+  font-size: 18px;
+}
+
+.rail__line {
+  width: 3px;
+  flex: 1 1 auto;
+  border-radius: 2px;
+  background: linear-gradient(180deg,
+    rgb(var(--svc-rgb, var(--svc-rgb-default))),
+    rgba(var(--svc-rgb, var(--svc-rgb-default)), 0));
+}
+
+.shift__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.shift__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.shift__top--hidden { align-items: center; }
+
+.shift__service {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.shift__total {
+  font-size: 24px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.shift__dots {
+  display: flex;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.shift__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dots);
+}
+
+.shift__meta {
+  display: block;
+  margin-top: 6px;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.shift__rate {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.shift__rate-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.shift__rate-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dots-soft);
+}
+
+.shift__note {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  color: var(--muted-2);
+  overflow-wrap: anywhere;
+}
+
+/* --- Форма --- */
+
+.field { margin-bottom: 16px; }
+
+.field-pair {
+  display: flex;
+  gap: 12px;
+}
+
+.field-pair .field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.input {
+  width: 100%;
+  height: var(--tap);
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.input::placeholder { color: var(--placeholder); }
+
+.input:focus {
+  outline: none;
+  border: 2px solid var(--accent);
+}
+
+.input--sm {
+  height: 56px;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.input--area {
+  height: auto;
+  min-height: 72px;
+  padding: 14px 16px;
+  font-size: 19px;
+  font-weight: 500;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.row .input { flex: 1 1 auto; }
+
+.hint {
+  margin: 8px 2px 0;
+  font-size: 14px;
+  color: var(--muted-2);
+}
+
+/* Кнопки даты */
+
+.date-row {
+  display: flex;
+  gap: 10px;
+  position: relative;
+}
+
+.date-btn {
+  flex: 1 1 0;
+  height: 64px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.date-btn--icon {
+  flex: 0 0 64px;
+  width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.date-btn--on {
+  border: 0;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: var(--accent-ink);
+  font-weight: 800;
+}
+
+.date-btn--on.date-btn--icon { color: var(--accent-ink); }
+
+/* Системный выбор даты: нужен живым для showPicker, но не виден */
+.date-native {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  padding: 0;
+}
+
+.date-chosen {
+  margin: 8px 2px 0;
+  font-size: 15px;
+  color: var(--accent);
+}
+
+/* Строка службы */
+
+.service-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.service-row__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 22px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-row__chevron { color: var(--muted); flex: 0 0 auto; }
+
+/* Блок «Подробнее» */
+
+.more {
+  margin: 18px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.more__summary {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  padding: 0 16px;
+  font-size: 19px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.more__summary::-webkit-details-marker { display: none; }
+
+.more__summary::after {
+  content: "▾";
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.more[open] .more__summary::after { content: "▴"; }
+
+.more__body {
+  padding: 6px 16px 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* --- Ошибки --- */
+
+.form-error {
+  margin: 14px 0 0;
+  color: var(--danger);
+  font-size: 16px;
+}
+
+.input--invalid { border-color: var(--danger); }
+
+/* Полоска обновления: в потоке страницы, над шапкой, не перекрывает её. */
+.update-bar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, var(--update-a), var(--update-b));
+  border-bottom: 1px solid var(--line);
+}
+
+.update-bar__text {
+  flex: 1 1 auto;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.update-bar__btn {
+  flex: 0 0 auto;
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: var(--accent-ink);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.update-bar__btn:disabled { opacity: 0.6; }
+
+.db-error {
+  position: relative;
+  z-index: 3;
+  padding: 12px var(--pad);
+  background: var(--error-bg);
+  color: var(--error-text);
+  font-size: 15px;
+}
+
+.delete-zone {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* --- Настройки --- */
+
+.section-title {
+  margin: 26px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section-title:first-child { margin-top: 6px; }
+
+.services {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service {
+  padding: 8px 8px 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.service__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.service__chip {
+  padding: 0;
+  cursor: pointer;
+  /* border: 0 здесь стоять не должен: рамку цвета службы даёт .chip.
+     Раньше её ставил код прямо в разметку, и она перебивала этот сброс. */
+}
+
+.service__name {
+  flex: 1 1 auto;
+  font-size: 19px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.service__remove {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.service__remove:active { color: var(--danger); }
+
+/* Плашки цвета: выбор в одно касание, без спектра */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 4px 4px;
+}
+
+.swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.swatch--on { border-color: var(--text); }
+
+.swatch--custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  padding: 0 14px;
+  background: none;
+  border: 1px dashed var(--swatch-dash);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.swatch--custom input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Переключатель */
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.switch__text {
+  flex: 1 1 auto;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.switch__hint {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted-2);
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch__track {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--switch-track);
+  padding: 3px;
+}
+
+.switch__knob {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.12s linear;
+}
+
+.switch input:checked ~ .switch__track {
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+}
+
+.switch input:checked ~ .switch__track .switch__knob {
+  background: var(--accent-ink);
+  transform: translateX(24px);
+}
+
+/* --- Данные --- */
+
+.data-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.data-report {
+  margin: 12px 0 0;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.data-report--error { color: var(--danger); }
+
+/* --- Шторка выбора службы --- */
+
+.sheet-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  background: var(--backdrop);
+}
+
+.sheet-backdrop[hidden] { display: none; }
+
+.sheet {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  max-height: 82vh;
+  overflow-y: auto;
+  padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, var(--sheet-a), var(--sheet-b));
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--sheet-border);
+  box-shadow: 0 -24px 70px var(--shadow-sheet);
+}
+
+.sheet__handle {
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: 3px;
+  background: var(--handle);
+}
+
+/* Шапка шторки: слева стрелка «назад» (на первом шаге её нет),
+   посередине заголовок, справа крестик. Обе кнопки — 44×44. */
+.sheet__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.sheet__title {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: Unbounded, 'Arial Black', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sheet__nav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background-color: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.sheet__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 64px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-row__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-row--on {
+  background: var(--row-on-bg);
+  border-color: var(--accent);
+}
+
+.sheet-row__check { color: var(--accent); flex: 0 0 auto; }
+
+/* Развилка: значок слева, шеврон справа. */
+/* Строки развилки длиннее названий служб: даём переносить, а не обрезать. */
+.sheet-row__name--fork {
+  font-size: 17px;
+  line-height: 1.25;
+  white-space: normal;
+  overflow: visible;
+}
+
+.sheet-row__icon { flex: 0 0 auto; display: flex; color: var(--accent); }
+.sheet-row__chevron { flex: 0 0 auto; display: flex; color: var(--muted); }
+
+/* Своя служба: поле, плашки цветов, кнопка «Готово». */
+.sheet-own {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheet-own .input {
+  height: 56px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.sheet-own .label { display: block; }
+
+.sheet-own .form-error { margin: 0; }
+
+/* «Готово» остаётся на виду, когда с открытой клавиатурой шторка становится
+   низкой: содержимое прокручивается под подложкой, а не уносит кнопку вниз.
+   Подложка непрозрачная и своя, а не на самой кнопке: у выключенной кнопки
+   приглушённая прозрачность, и сквозь неё было бы видно содержимое. */
+.sheet-own__foot {
+  position: sticky;
+  bottom: -1px;
+  z-index: 1;
+  margin-top: auto;
+  padding: 10px 0 0;
+  background: var(--sheet-b);
+}
+
+.sheet-own__done:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- Строка выгрузки на главном экране --- */
+
+.datarow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 44px;
+  margin: 10px 0 14px;
+}
+
+.datarow__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 6px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.datarow__btn:active { color: var(--text); }
+
+.datarow__dot { color: var(--muted-2); }
+
+/* --- Напоминание о резервной копии --- */
+
+.backup {
+  margin: 10px 0 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--backup-bg);
+  border: 1px solid var(--backup-border);
+}
+
+.backup__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.backup__text {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.backup__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* --- Малая кнопка --- */
+
+/* Намеренно НЕ разновидность .btn--primary: декор большой кнопки — рифление,
+   внутренняя рамка, радиальный блик, дальние тени — на площади 130×44
+   читается как грязь. Здесь работают только градиент и блик сверху. */
+.btn--small {
+  width: auto;
+  min-height: 0;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid var(--btn-border);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  /* Без своего цвета фона браузер подставляет системный серый — он вылезает
+     по скруглённым углам из-под градиента. */
+  background-color: transparent;
+  background-image: linear-gradient(135deg, var(--btn-a) 0%, var(--btn-b) 42%, var(--btn-c) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--btn-gloss-top),
+    0 1px 3px var(--shadow-btn-sm-near),
+    0 3px 8px var(--shadow-btn-sm-far);
+  transition: transform 120ms linear, box-shadow 120ms linear;
+}
+
+.btn--small:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 var(--btn-gloss-top),
+    0 1px 2px var(--shadow-btn-sm-near),
+    0 2px 4px var(--shadow-btn-sm-far);
+}
+
+/* Разрушающее действие не должно выглядеть так же, как безопасное. */
+.btn--wipe {
+  background-image: none;
+  background-color: transparent;
+  border: 1px solid var(--wipe-border);
+  color: var(--danger);
+  box-shadow: none;
+}
+
+.btn--wipe:active {
+  background-color: var(--wipe-bg);
+  box-shadow: none;
+}
+
+.btn--plain {
+  width: auto;
+  min-height: 44px;
+  padding: 0 8px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* --- Окно выбора при загрузке файла --- */
+
+.modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--backdrop-modal);
+}
+
+.modal[hidden] { display: none; }
+
+.modal__box {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--modal-a), var(--modal-b));
+  border: 1px solid var(--modal-border);
+  box-shadow: 0 24px 70px var(--shadow-modal);
+}
+
+.modal__title {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.modal__text {
+  margin: 0 0 18px;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal__actions .btn { width: 100%; }
+
+/* Сообщение формы теперь под кнопкой сохранения */
+.action-bar .form-error {
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+.hint--tight {
+  margin: 6px 2px 4px;
+  font-size: 13px;
+}
+
+/* Номер версии — самой нижней строкой в настройках */
+.app-version {
+  margin: 22px 2px 0;
+  font-size: 13px;
+  color: var(--muted-2);
+}
+
+/* Вторая строка блока: номер версии сверху, разработчик под ним. */
+.app-version--dev { margin-top: 2px; }

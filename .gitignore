@@ -1,0 +1,9 @@
+# Служебное. В публичный репозиторий не идёт.
+Новая папка/
+_publish/
+node_modules/
+*.log
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/

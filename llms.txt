@@ -1,0 +1,26 @@
+# Delay Kassu (Делай Кассу)
+
+Delay Kassu is a free offline web app (PWA) that tracks work shifts and earnings for couriers and shift workers. Logging one shift takes about fifteen seconds: orders and the amount earned, plus optional hours, tips, kilometres and a note. The app shows earnings per hour and per order, and rolls shifts up into a week.
+
+## Key facts
+
+- Type: installable web app (PWA). Plain HTML/CSS/JavaScript, no libraries, no build step.
+- For: couriers and delivery riders (Ozon, Kuper, Magnit, Yandex, VkusVill, Samokat) and anyone paid per shift or per order.
+- Platforms: any modern Android or iOS browser. Tested on Android only; iPhone untested.
+- Install: open https://app.delaykassu.ru on a phone and add it to the home screen. Nothing to download, no app store.
+- Website: https://delaykassu.ru
+- Contact: https://t.me/delaykassu
+
+## Main limitation
+
+All records are stored only on the user's device (IndexedDB). There is no account, no cloud sync and no server holding shift history, and the app never sends user data anywhere - no analytics, no tracking. The only network requests the app makes are for its own files from the site it is hosted on, including checking whether a new version is available.
+
+Clearing browser data or deleting the app deletes the records, so exports matter. Only day and week views exist; monthly statistics are not implemented yet.
+
+## Data and privacy
+
+Records stay on the device. No sign-up, no analytics, no tracking. Records can be exported as a CSV spreadsheet or as a full JSON backup.
+
+## Source
+
+Source code, licence (MIT) and the release archive are in this repository's root and Releases section.
